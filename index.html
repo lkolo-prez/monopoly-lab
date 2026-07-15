@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monopoly Lab — silnik AI, symulacje i wytrenowany model</title>
+<meta name="description" content="Otwarte laboratorium Monopoly: silnik oceny na żywo (Monte Carlo), tysiące symulacji, turnieje, wytrenowany model (ewolucja + RL) i pełna analiza planszy. Wszystko lokalnie w przeglądarce.">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
+    --txt:#e6edf3; --dim:#8b98a9; --accent:#58a6ff; --good:#3fb950; --bad:#f85149; --warn:#e3b341; --gold:#f0c150;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:
+    radial-gradient(1100px 520px at 82% -8%, #17253f 0%, transparent 62%),
+    radial-gradient(900px 500px at 0% 8%, #201a33 0%, transparent 55%),
+    var(--bg); color:var(--txt); font:16px/1.6 system-ui,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  header{padding:64px 0 30px;text-align:center}
+  .badge{display:inline-block;font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:3px 12px;margin-bottom:18px}
+  h1{font-size:clamp(30px,6vw,50px);margin:0 0 10px;letter-spacing:-1.5px;line-height:1.05;
+     background:linear-gradient(120deg,#fff 20%,#9cc4ff 70%,#f0c150);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--dim);font-size:clamp(16px,2.4vw,20px);max-width:640px;margin:0 auto 26px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:11px;font-weight:700;font-size:15px}
+  .btn.primary{background:linear-gradient(120deg,#3a7bd5,#58a6ff);color:#04121f}
+  .btn.gold{background:linear-gradient(120deg,#e0a93a,#f0c150);color:#1a1200}
+  .btn.ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line)}
+  .strip{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:34px 0 6px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:150px;text-align:center}
+  .stat b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+  .stat span{color:var(--dim);font-size:12.5px}
+  section{padding:44px 0;border-top:1px solid var(--line);margin-top:44px}
+  h2{font-size:24px;margin:0 0 6px;letter-spacing:-.4px}
+  .muted{color:var(--dim)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h3{margin:0 0 6px;font-size:16px}
+  .card p{margin:0;color:var(--dim);font-size:14px}
+  .card .ico{font-size:22px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:18px}
+  td,th{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .ok{color:var(--good);font-weight:700}
+  .champ{display:flex;gap:20px;flex-wrap:wrap;align-items:center;background:linear-gradient(120deg,#1a1c10,#161b22);border:1px solid #40391c;border-radius:14px;padding:22px;margin-top:20px}
+  .champ .big{font-size:44px;font-weight:800;color:var(--gold);line-height:1}
+  pre{background:#0b0f16;border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto;font-size:13px;color:#cfe}
+  code{font-family:ui-monospace,Menlo,monospace}
+  footer{padding:30px 0 60px;color:var(--dim);font-size:13px;text-align:center;border-top:1px solid var(--line);margin-top:44px}
+  .kbd{font-size:12px;color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">otwarte · działa lokalnie · bez chmury</div>
+    <h1>Monopoly Lab</h1>
+    <p class="lead">Silnik oceny na żywo, tysiące symulacji, turnieje i <b>wytrenowany model AI</b> —
+      plus pełna analiza matematyczna planszy. Analizuj Monopoly tak, jak analizuje się szachy.</p>
+    <div class="cta">
+      <a class="btn primary" href="monopoly-web/index.html">🎮 Otwórz Monopoly Lab</a>
+      <a class="btn gold" href="monopoly-web/stats.html">📊 Statystyki i odkrycia</a>
+      <a class="btn ghost" href="#jak">⚙️ Jak uruchomić</a>
+    </div>
+    <div class="strip">
+      <div class="stat"><b class="ok">+10.5</b><span>przewaga modelu nad bazą (pkt%)</span></div>
+      <div class="stat"><b>72–88%</b><span>win-rate championa 1v1</span></div>
+      <div class="stat"><b>~500k+</b><span>rozegranych partii</span></div>
+      <div class="stat"><b>10</b><span>strategii/agentów AI</span></div>
+    </div>
+  </header>
+
+  <section id="co">
+    <h2>Co to jest</h2>
+    <p class="muted">Kompletne środowisko badawczo-rozrywkowe do Monopoly: grasz, symulujesz i trenujesz — wszystko lokalnie.</p>
+    <div class="cards">
+      <div class="card"><div class="ico">🧠</div><h3>Silnik oceny na żywo</h3><p>Setki dogrywek Monte Carlo z bieżącej pozycji (~30 ms) = realne szanse na wygraną. Pasek oceny i adnotacje ruchów jak w szachach.</p></div>
+      <div class="card"><div class="ico">🗺️</div><h3>Analiza planszy</h3><p>Heatmapa lądowań (łańcuch Markowa), ROI grup, najgorętsze pola. Matematyczne uzasadnienie strategii.</p></div>
+      <div class="card"><div class="ico">🧪</div><h3>Laboratorium symulacji</h3><p>Tysiące gier w przeglądarce: win-rate, bankructwa, histogramy, turnieje H2H z rankingiem Elo.</p></div>
+      <div class="card"><div class="ico">🏆</div><h3>Wytrenowany model</h3><p>Champion wypracowany ewolucyjnie (self-play, CEM) + polityka RL. Dominuje w stawce i w pojedynkach.</p></div>
+      <div class="card"><div class="ico">🔌</div><h3>API i serwer REST</h3><p>Podłącz własnego bota (Python lub dowolny język przez HTTP). Agenci MCTS i LLM (lokalne LM Studio).</p></div>
+      <div class="card"><div class="ico">🎯</div><h3>Tryby NEW Monopoly PS5</h3><p>Cele trybu Szybkiego i plan zdobycia platyny dla wersji Ubisoftu na PlayStation.</p></div>
+    </div>
+  </section>
+
+  <section id="odkrycia">
+    <h2>Kluczowe odkrycia — zgodne z literaturą naukową</h2>
+    <p class="muted">Nasze niezależne symulacje odtwarzają wyniki publikowanych prac (łańcuchy Markowa, badania RL).</p>
+    <table>
+      <tr><th>Nasze wyniki (symulacja)</th><th>Literatura</th><th>Zgodność</th></tr>
+      <tr><td>Więzienie ~22% — najczęstsze pole; potem czerwone (Illinois), Start, parking, dworce, pomarańczowe</td><td>Analiza Markowa: identyczna kolejność; Illinois najczęstsze poza więzieniem</td><td class="ok">✓ zgodne</td></tr>
+      <tr><td>Pomarańczowe = najlepszy ROI (najszybszy zwrot przy 3 domach)</td><td>„Orange reaches break-even fastest / lowest rounds to profit"</td><td class="ok">✓ zgodne</td></tr>
+      <tr><td>Model-free RL na samej decyzji zakupu plateauuje (parytet)</td><td>Purdue: skośny rozkład akcji szkodzi uczeniu → potrzebna hybryda/hierarchia</td><td class="ok">✓ zgodne</td></tr>
+      <tr><td>Champion (ewolucja): 72–88% w 1v1, 42% w stawce 8</td><td>SOTA: hybrydowy PPO ~91% vs boty o stałej polityce (deep RL, pełna przestrzeń akcji)</td><td class="muted">porównywalny kierunek</td></tr>
+    </table>
+    <p class="muted" style="font-size:13px;margin-top:12px">Źródła: prace o łańcuchach Markowa w Monopoly (UIUC, MIT, Uppsala) oraz
+      „Learning Monopoly Gameplay: A Hybrid Model-Free Deep RL" (Purdue). Nasz model używa ewolucji self-play (CEM), nie deep RL.</p>
+  </section>
+
+  <section id="model">
+    <h2>Wytrenowany model „champion"</h2>
+    <div class="champ">
+      <div><div class="big">🏆</div></div>
+      <div style="flex:1;min-width:240px">
+        <p style="margin:0 0 8px">Trenowany <b>self-play (CEM)</b> na wielu panelach i liczbach graczy (anty-przeuczenie).
+          Wypracował schemat: <b>koleje + pomarańczowe + spółki + tanie sety</b>, wysoka rezerwa gotówki, późne wychodzenie z więzienia.</p>
+        <p class="muted" style="margin:0">Ogrywa <b>każdą</b> inną strategię w bezpośrednim pojedynku (kolejowy 80%, pomarańczowy 75%, monopolista 72%, agresor 88%).
+          Ważne odkrycie: model <b>nie transferuje</b> między silnikami (przeuczenie) — przeglądarka ma osobnego, natywnie wytrenowanego championa.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="jak">
+    <h2>Jak uruchomić</h2>
+    <p class="muted"><b>W przeglądarce</b> — nic nie instalujesz: <a href="monopoly-web/index.html">otwórz Monopoly Lab</a>.</p>
+    <p class="muted"><b>Symulator w Pythonie</b> (bez zależności zewnętrznych):</p>
+<pre><code>git clone https://github.com/lkolo-prez/monopoly-lab.git
+cd monopoly-lab
+python3 run_sim.py 10000          # masowa symulacja + ranking strategii
+python3 tournament.py             # turniej H2H, Elo, CSV
+python3 train_evolve.py 30        # trenuj własny model (ewolucja self-play)
+python3 server.py                 # serwer REST — podłącz własnego bota
+python3 examples/llm_demo.py      # agent LLM przez lokalne LM Studio</code></pre>
+    <p class="muted" style="font-size:13px">Pełna dokumentacja i lista narzędzi w <a href="README.md">README</a>.</p>
+  </section>
+</div>
+
+<footer>
+  Monopoly Lab · otwarte oprogramowanie · zbudowane z Claude Code ·
+  <a href="https://github.com/lkolo-prez/monopoly-lab">GitHub</a>
+</footer>
+</body>
+</html>

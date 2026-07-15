@@ -1,0 +1,188 @@
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
+    --txt:#e6edf3; --dim:#8b98a9; --accent:#58a6ff; --good:#3fb950; --bad:#f85149; --warn:#e3b341; --gold:#f0c150;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+    radial-gradient(1200px 600px at 80% -10%, #14203a 0%, transparent 60%),
+    var(--bg); color:var(--txt); font:15px/1.55 system-ui,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 60px}
+  h1{font-size:26px;margin:0;letter-spacing:-.5px}
+  .sub{color:var(--dim);margin:4px 0 22px}
+  h2{font-size:16px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin:30px 0 12px;font-weight:700}
+  .grid{display:grid;gap:14px}
+  .cols{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card.wide{grid-column:1/-1}
+  .kpi{display:flex;flex-direction:column;gap:2px}
+  .kpi .big{font-size:34px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .kpi .lab{color:var(--dim);font-size:12.5px}
+  .gold{color:var(--gold)} .g{color:var(--good)} .b{color:var(--bad)} .a{color:var(--accent)} .w{color:var(--warn)}
+  .hbar{display:grid;grid-template-columns:118px 1fr 46px;align-items:center;gap:8px;margin:6px 0;font-size:12.5px}
+  .track{height:16px;background:var(--panel2);border-radius:8px;overflow:hidden}
+  .fill{height:100%;border-radius:8px}
+  .hbar b{text-align:right;font-variant-numeric:tabular-nums}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--dim);font-size:11.5px;margin-top:8px}
+  .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle;background:var(--k,#888)}
+  /* oś momentów */
+  .timeline{position:relative;margin-top:6px;padding-left:26px}
+  .timeline::before{content:"";position:absolute;left:9px;top:4px;bottom:4px;width:2px;background:linear-gradient(var(--accent),var(--gold))}
+  .moment{position:relative;margin:0 0 16px;padding:2px 0}
+  .moment::before{content:"";position:absolute;left:-22px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px #0d1117,0 0 0 4px var(--line)}
+  .moment.gold::before{background:var(--gold)}
+  .moment.bad::before{background:var(--bad)}
+  .moment h3{margin:0 0 2px;font-size:14.5px}
+  .moment p{margin:0;color:var(--dim);font-size:13px}
+  .tag{display:inline-block;font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:1px 8px;margin-right:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+  .foot{color:var(--dim);font-size:12px;margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+  a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <h1>🎩 Monopoly — Statystyki i najważniejsze momenty</h1>
+  <div class="sub">Wyniki symulacji, treningu modeli i kluczowe odkrycia. Dane z silnika projektu (setki tysięcy partii).</div>
+
+  <div class="grid cols">
+    <div class="card kpi"><div class="big gold" id="kChamp">+10.5</div><div class="lab">Przewaga championa nad bazą (pkt%, finalny model Pythona)</div></div>
+    <div class="card kpi"><div class="big a">72–88%</div><div class="lab">Win-rate championa 1v1 przeciw najlepszym botom</div></div>
+    <div class="card kpi"><div class="big g">~500k+</div><div class="lab">Rozegranych partii symulacyjnych i treningowych</div></div>
+    <div class="card kpi"><div class="big w">10</div><div class="lab">Strategii/agentów (w tym 2 wytrenowane modele)</div></div>
+  </div>
+
+  <h2>🏆 Karta modelu — co champion uznał za najcenniejsze</h2>
+  <div class="card wide">
+    <div id="genomeBars"></div>
+    <div class="legend"><span style="--k:#e8892b">im dłuższy słupek, tym wyższy priorytet grupy (0–3)</span></div>
+    <div class="sub" style="margin:10px 0 0">Schemat modelu: <b>koleje + pomarańczowe + spółki + tanie sety</b>, wysoka rezerwa gotówki (403$), późne wychodzenie z więzienia — zgodne z teorią ROI i płynności.</div>
+  </div>
+
+  <div class="grid cols">
+    <div class="card">
+      <h2 style="margin-top:2px">🤖 Krzywa uczenia RL (REINFORCE)</h2>
+      <svg id="rlChart" viewBox="0 0 420 200"></svg>
+      <div class="sub" style="margin-top:6px">Uczciwy wynik: polityka zakupu <b>plateauuje ~parytecie</b> — sam zakup to za mały lewar. Bije jednak naiwnego Agresora 55:45.</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:2px">🥇 Ranking strategii (stawka 8, baza 25%)</h2>
+      <div id="leaderBars"></div>
+    </div>
+  </div>
+
+  <h2>🧭 Najlepsza strategia zależnie od kontekstu</h2>
+  <div class="card wide">
+    <table>
+      <tr><th>Liczba graczy</th><th>Najlepsze podejście</th><th>Dlaczego</th></tr>
+      <tr><td>2–3</td><td class="a">Drogie czynsze / cierpliwość</td><td>jeden hotel nokautuje pojedynczego rywala</td></tr>
+      <tr><td>4</td><td class="a">Agresywny handel o komplety</td><td>handel najszybciej tworzy monopole</td></tr>
+      <tr><td>5–6</td><td class="a">Koleje (4 dworce)</td><td>długa gra premiuje stały dochód bez budowy</td></tr>
+    </table>
+  </div>
+
+  <h2>⚔️ Pojedynki 1v1 (H2H) i długość gier</h2>
+  <div class="grid cols">
+    <div class="card">
+      <div class="sub" style="margin:0 0 8px">Macierz H2H — win% wiersza przeciw kolumnie (zielono = przewaga). Champion ogrywa wszystkich.</div>
+      <div id="h2hMatrix" style="overflow-x:auto"></div>
+    </div>
+    <div class="card">
+      <div class="sub" style="margin:0 0 8px">Rozkład długości gier (co 20 rund). Ostatni słupek = limit rund („paradoks nieskończonej gry").</div>
+      <svg id="histChart" viewBox="0 0 420 190"></svg>
+      <div class="sub" id="histNote" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <h2>⭐ Najważniejsze momenty i odkrycia</h2>
+  <div class="card wide">
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <div class="foot">
+    Interaktywne laboratorium: <a href="https://claude.ai/code/artifact/64b350cd-d449-49eb-8a77-e1c7e6b7f7c0">Monopoly Lab</a>
+    · dane odświeżają się przy każdym uruchomieniu symulacji w projekcie.
+  </div>
+</div>
+
+<script>
+  const GROUP_COLORS={brown:"#7b5a3a",lightblue:"#a9d6ea",pink:"#d6338b",orange:"#e8892b",red:"#d62828",yellow:"#f4d03f",green:"#2a9d4a",darkblue:"#2d4bd8",rail:"#cfd8dc",util:"#8fd694"};
+  // genom finalnego championa Pythona (wielopanelowy, odporny)
+  const GENOME={rail:3.47,orange:2.72,util:2.39,brown:2.27,red:2.12,lightblue:2.03,pink:1.47,darkblue:1.27,green:0.53,yellow:0.45};
+  const genomeRows=Object.entries(GENOME).sort((a,b)=>b[1]-a[1]);
+  document.getElementById("genomeBars").innerHTML=genomeRows.map(([k,v])=>
+    `<div class="hbar"><span>${k}</span><div class="track"><div class="fill" style="width:${v/3*100}%;background:${GROUP_COLORS[k]}"></div></div><b>${v.toFixed(2)}</b></div>`).join("");
+
+  // ranking 8-way (Python, champion single-panel)
+  const LEADER=[["champion",42.5,"#f0c150"],["monopolista",28.2,"#58a6ff"],["kolejowy",26.9,"#58a6ff"],["ostrożny",25.5,"#58a6ff"],["ekonom",25.0,"#58a6ff"],["luksusowy",24.4,"#58a6ff"],["pomarańcz.-czerw.",22.2,"#58a6ff"],["RL",17.9,"#8b98a9"],["agresor",12.4,"#f85149"]];
+  const lmax=Math.max(...LEADER.map(x=>x[1]));
+  document.getElementById("leaderBars").innerHTML=LEADER.map(([k,v,c])=>
+    `<div class="hbar"><span>${k}</span><div class="track"><div class="fill" style="width:${v/lmax*100}%;background:${c}"></div></div><b>${v.toFixed(1)}%</b></div>`).join("");
+
+  // krzywa RL
+  (function(){
+    const data=[[1500,27.5],[3000,20.5],[4500,20.75],[6000,24.75],[7500,25.25],[9000,19.25],[10500,21.0],[12000,19.5]];
+    const W=420,H=200,pad=34, x0=data[0][0], x1=data[data.length-1][0], ymin=15, ymax=30;
+    const sx=e=>pad+(e-x0)/(x1-x0)*(W-pad-8);
+    const sy=v=>H-24-(v-ymin)/(ymax-ymin)*(H-24-8);
+    let g='';
+    // baza 25%
+    g+=`<line x1="${pad}" y1="${sy(25)}" x2="${W-8}" y2="${sy(25)}" stroke="#8b98a955" stroke-dasharray="4 4"/>`;
+    g+=`<text x="${W-8}" y="${sy(25)-4}" fill="#8b98a9" font-size="10" text-anchor="end">baza 25%</text>`;
+    for(let v=15;v<=30;v+=5){ g+=`<line x1="${pad}" y1="${sy(v)}" x2="${W-8}" y2="${sy(v)}" stroke="#ffffff10"/><text x="${pad-6}" y="${sy(v)+3}" fill="#8b98a9" font-size="10" text-anchor="end">${v}%</text>`; }
+    const pts=data.map(d=>`${sx(d[0])},${sy(d[1])}`).join(" ");
+    g+=`<polyline points="${pts}" fill="none" stroke="#58a6ff" stroke-width="2.5"/>`;
+    data.forEach(d=>{ g+=`<circle cx="${sx(d[0])}" cy="${sy(d[1])}" r="3" fill="#58a6ff"/>`; });
+    g+=`<text x="${pad}" y="${H-6}" fill="#8b98a9" font-size="10">1.5k epizodów</text><text x="${W-8}" y="${H-6}" fill="#8b98a9" font-size="10" text-anchor="end">12k</text>`;
+    document.getElementById("rlChart").innerHTML=g;
+  })();
+
+  // oś momentów
+  const MOMENTS=[
+    ["","🎲 Więzienie = magnes planszy (~22%)","Łańcuch Markowa: pola 6–9 oczek za więzieniem (pomarańczowe, czerwone) są najczęściej odwiedzane.","Markow"],
+    ["","💰 Pomarańczowe = najlepszy ROI","Zieleń daje najwyższy dochód, ale koszt kompletu z hotelami (~4000$) rujnuje jej zwrot. Spółki i granatowe to pułapki.","ROI"],
+    ["","🤝 Handel to najważniejsza mechanika","Bez wymian gry grzęzną — paradoks nieskończonej gry (~12%). Wyłączenie handlu potraja długość partii.","mechaniki"],
+    ["bad","💥 Kup wszystko bez rezerwy = bankructwo","Agresor ma najczęstsze bankructwa (~60%) i najsłabszy wynik. Płynność ponad chciwość.","wniosek"],
+    ["","🧭 Kontekst decyduje","2–3 graczy: drogie czynsze. 4: handel. 5–6: koleje. Nie ma jednej najlepszej strategii — zależy od stołu.","meta"],
+    ["","🤖 RL osiąga tylko parytet","Model-free RL na samej decyzji zakupu plateauuje — potrzebuje bogatszej przestrzeni akcji. Ale bije Agresora 55:45.","RL"],
+    ["gold","🏆 Ewolucyjny CHAMPION dominuje","Trening self-play (CEM, wielopanelowy) wypracował odporny schemat bijący całą stawkę (42%, baza 25%) i pojedynki 1v1 (72–88% vs najlepsi). Twój wytrenowany model Monopoly.","przełom"],
+    ["bad","🔬 Model nie transferuje między silnikami","Champion Pythona dał 4% w silniku JS — przeuczył się do konkretnej implementacji. Wniosek: optima są zależne od silnika.","odkrycie"],
+  ];
+  document.getElementById("timeline").innerHTML=MOMENTS.map(([cls,h,p,tag])=>
+    `<div class="moment ${cls}"><h3>${h}</h3><p><span class="tag">${tag}</span>${p}</p></div>`).join("");
+
+  // macierz H2H (1v1)
+  (function(){
+    const keys=["champion","kolejowy","pomczerw","monopolista","agresor"];
+    const M={champion:{kolejowy:80,pomczerw:75,monopolista:72,agresor:88},
+      kolejowy:{champion:18,pomczerw:43,monopolista:45,agresor:61},
+      pomczerw:{champion:22,kolejowy:49,monopolista:46,agresor:66},
+      monopolista:{champion:25,kolejowy:58,pomczerw:48,agresor:66},
+      agresor:{champion:10,kolejowy:34,pomczerw:30,monopolista:30}};
+    let h='<table style="font-size:12px"><tr><th></th>'+keys.map(k=>`<th style="text-align:center">${k.slice(0,6)}</th>`).join("")+'</tr>';
+    keys.forEach(a=>{ h+=`<tr><td><b>${a}</b></td>`+keys.map(b=>{
+      if(a===b) return '<td style="text-align:center;color:#556">—</td>';
+      const v=M[a][b], t=(v-50)/50;
+      const bg = v>=50?`rgba(63,185,80,${Math.min(1,t)*0.85})`:`rgba(248,81,73,${Math.min(1,-t)*0.85})`;
+      return `<td style="text-align:center;background:${bg};font-variant-numeric:tabular-nums">${v}</td>`;
+    }).join("")+'</tr>'; });
+    document.getElementById("h2hMatrix").innerHTML=h+'</table>';
+  })();
+
+  // histogram długości gier
+  (function(){
+    const bins=[103,2012,1212,295,77,22,8,7,2,262], labels=["0","20","40","60","80","100","120","140","160","180+"];
+    const W=420,H=190,pad=8, bw=(W-pad*2)/bins.length, max=Math.max(...bins);
+    let g='';
+    for(let y=0;y<=3;y++){ const yy=H-24-(y/3)*(H-40); g+=`<line x1="${pad}" y1="${yy}" x2="${W-pad}" y2="${yy}" stroke="#ffffff10"/>`; }
+    bins.forEach((c,i)=>{ const bh=(c/max)*(H-40), x=pad+i*bw, yy=H-24-bh;
+      const col = i===9?"#f0c150":"#58a6ff";
+      g+=`<rect x="${x+2}" y="${yy}" width="${bw-4}" height="${bh}" fill="${col}" rx="2"/>`;
+      g+=`<text x="${x+bw/2}" y="${H-8}" fill="#8b98a9" font-size="9" text-anchor="middle">${labels[i]}</text>`;
+    });
+    document.getElementById("histChart").innerHTML=g;
+    document.getElementById("histNote").innerHTML="Średnia długość: <b>51 rund</b> · ~6.5% gier dobija do limitu (paradoks nieskończonej gry).";
+  })();
+</script>
