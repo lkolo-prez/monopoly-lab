@@ -209,7 +209,9 @@
   .chip.act:hover{border-color:var(--accent);transform:translateY(-1px)}
 
   .overlay,.tradeModal{backdrop-filter:blur(6px)}
-  .setup,.tradeBox{box-shadow:0 24px 70px rgba(0,0,0,.55);border-radius:16px}
+  .setup,.tradeBox{box-shadow:0 24px 70px rgba(0,0,0,.55);border-radius:16px;max-height:92vh;overflow:auto}
+  .setup .row{flex-wrap:wrap}
+  .setup h1{font-size:26px}
   .setup h1{background:linear-gradient(120deg,#fff,#9cc4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
   .chk{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:13px;cursor:pointer;user-select:none}
   .chk input{accent-color:var(--accent)}
@@ -224,9 +226,12 @@
 <body>
 <div class="overlay" id="setup">
   <div class="setup">
-    <h1>🎩 Monopoly Analyzer</h1>
-    <p>Silnik oceny na żywo (jak w szachach): prawdopodobieństwo wygranej po każdym ruchu,
-       adnotacje decyzji (!! / ? / ??), metryki ryzyka i boty o różnych strategiach.</p>
+    <h1>🎩 Monopoly Lab</h1>
+    <p>Silnik oceny na żywo (jak w szachach), symulacje, turnieje i wytrenowany model AI.
+       Wybierz scenariusz albo skonfiguruj własną grę.</p>
+    <div class="row"><label>🎬 Scenariusz</label>
+      <select id="scenario"></select>
+    </div>
     <div class="row"><label>Tryb</label>
       <select id="mode">
         <option value="human">Gram (człowiek vs boty)</option>
@@ -249,6 +254,10 @@
     </div>
     <div class="row"><label>Kasa Społeczna</label>
       <select id="chestVariant"><option value="classic" selected>Klasyczna (16 kart)</option><option value="2021">Nowa 2021 (fani)</option></select>
+    </div>
+    <div class="row"><label>Pensja za START</label>
+      <select id="goSalary"><option value="0">0 (bez kasy za START)</option><option value="200" selected>200 (klasyk)</option><option value="400">400 (hojnie)</option></select>
+      <label class="chk"><input type="checkbox" id="freeParking"> 🅿️ pula na Bezpłatnym parkingu</label>
     </div>
     <div id="opps"></div>
     <div class="row" style="margin-top:14px">
@@ -436,7 +445,11 @@
       <input type="number" id="tradeCash" value="0" step="10" style="width:110px">
       <span class="muted">dodatnia = Ty dopłacasz, ujemna = on dopłaca</span>
     </div>
-    <div class="verdict" id="tradeVerdict">Zaznacz pola i kliknij „Oceń ofertę”.</div>
+    <div class="row"><label>Karty wyjścia 🎫</label>
+      <label class="chk"><input type="checkbox" id="tradeGiveCard"> oddaję kartę <span id="tgcOwn" class="muted"></span></label>
+      <label class="chk"><input type="checkbox" id="tradeRecvCard"> chcę kartę <span id="trcOwn" class="muted"></span></label>
+    </div>
+    <div class="verdict" id="tradeVerdict">Zaznacz pola/karty i kliknij „Oceń ofertę”.</div>
     <div class="controls" style="margin-top:10px">
       <button id="tradeEval" class="sec">🧮 Oceń ofertę (silnik)</button>
       <button id="tradeDo" class="ok" disabled>✅ Wykonaj</button>
@@ -480,6 +493,28 @@ function renderOpps(){
   }
 }
 $("goal").innerHTML=Object.entries(GOALS).map(([k,g])=>`<option value="${k}">${g.label}</option>`).join("");
+
+const SCENARIOS={
+  "":{label:"— własne ustawienia —"},
+  klasyk:{label:"Klasyk (4 graczy, 1500)", mode:"human", np:4, cash:1500},
+  rich:{label:"Bogaty start (5000$ — szybkie hotele)", mode:"human", np:4, cash:5000},
+  parking:{label:"Free Parking jackpot 🅿️", mode:"human", np:4, cash:1500, freeParking:true},
+  chaos:{label:"Chaos (karty 2021 + jackpot + START 400)", mode:"human", np:4, cash:1500, freeParking:true, goSalary:400, chest:"2021"},
+  hardcore:{label:"Hardcore (1000$, bez pensji za START)", mode:"human", np:4, cash:1000, goSalary:0},
+  notrade:{label:"Bez handlu (gra grzęźnie)", mode:"human", np:4, cash:1500, trades:false},
+  champ:{label:"Obserwuj: Champion vs top 3", mode:"watch", np:4, cash:1500, bots:["champion","kolejowy","monopolista","pomczerw"]},
+  animals:{label:"6 graczy (jak przy platynie PS5)", mode:"human", np:6, cash:1500},
+  speed:{label:"Szybki cel: Real Estate Agent", mode:"human", np:4, cash:1500, goal:"real_estate"},
+};
+$("scenario").innerHTML=Object.entries(SCENARIOS).map(([k,s])=>`<option value="${k}">${s.label}</option>`).join("");
+$("scenario").onchange=()=>{ const s=SCENARIOS[$("scenario").value]; if(!s||!s.mode) return;
+  if(s.mode)$("mode").value=s.mode; if(s.np)$("np").value=s.np; if(s.cash)$("cash").value=s.cash;
+  if(s.goSalary!=null)$("goSalary").value=s.goSalary; $("freeParking").checked=!!s.freeParking;
+  $("chestVariant").value=s.chest||"classic"; $("rTrades").checked=s.trades!==false;
+  $("goal").value=s.goal||"";
+  renderOpps();
+  if(s.bots){ s.bots.forEach((b,i)=>{ const el=$("st"+i); if(el)el.value=b; }); }
+};
 $("np").onchange=renderOpps; $("mode").onchange=renderOpps; renderOpps();
 
 $("start").onclick=()=>{
@@ -493,6 +528,7 @@ $("start").onclick=()=>{
       strat: human?"balanced":$("st"+i).value, diff: human?"sredni":$("df"+i).value });
   }
   const cfg={startCash, goal, chestVariant:$("chestVariant").value,
+    goSalary:+$("goSalary").value, freeParkingJackpot:$("freeParking").checked,
     forcedAuction:$("rAuction").checked, allowTrades:$("rTrades").checked, allowMortgage:$("rMortgage").checked};
   const st=M.newGame(spec,cfg);
   app={st, curId:0, hist:[], hstate:null, aiDelay:650, watch:(mode==="watch"),
@@ -586,6 +622,7 @@ function renderRisk(){
   let goalRow="";
   if(app.goal){ const gp=goalProgress(st,id);
     goalRow=`<div class="metric risk-md"><span>🎯 Cel: ${gp.label}</span><b>${gp.cur} / ${gp.target}</b></div>`; }
+  if(st.freeParking) goalRow+=`<div class="metric" style="color:#f0c150"><span>🅿️ Pula parkingu</span><b>${st.pot||0}$</b></div>`;
   box.innerHTML=goalRow+`
     <div class="metric"><span>Gotówka</span><b>${st.players[id].cash}$</b></div>
     <div class="metric"><span>Wartość netto (udział w rynku)</span><b>${nw} (${(100*nw/totalNW).toFixed(0)}%)</b></div>
@@ -842,19 +879,22 @@ function renderManage(active){
   const box=$("manage"); box.innerHTML=""; if(!active){ return; }
   const st=app.st, id=app.humanId, mine=M.propsOf(st,id);
   if(!mine.length){ box.innerHTML='<span class="muted">Nie masz jeszcze nieruchomości.</span>'; }
-  // Budowa
-  const buildable=Object.keys(M.GROUPS).filter(g=>M.ownsFullGroup(st,id,g)&&!M.GROUPS[g].some(p=>st.mort[p]));
-  buildable.forEach(g=>{
-    const arr=M.GROUPS[g], minH=Math.min(...arr.map(p=>st.houses[p]));
-    const tgt=arr.reduce((a,b)=>st.houses[b]<st.houses[a]?b:a), cost=M.BOARD[tgt][6];
-    const canHotel=st.houses[tgt]===4;
-    if(minH<5 && st.players[id].cash>=cost && ((canHotel&&st.bankHotels>0)||(!canHotel&&st.bankHouses>0))){
-      const chip=document.createElement("span"); chip.className="chip act";
-      chip.style.borderColor=M.GROUP_COLORS[g];
-      chip.textContent=`🏗️ Buduj ${M.BOARD[tgt][1]} (${cost}$)`;
-      chip.onclick=()=>{ st.players[id].cash-=cost; st.houses[tgt]++; if(canHotel){st.bankHotels--;st.bankHouses+=4;}else st.bankHouses--; log(`Budujesz na ${M.BOARD[tgt][1]}`); renderBoard(); renderPlayers(); renderRisk(); renderManage(true); };
-      box.appendChild(chip);
-    }
+  // Budowa — panel per-komplet z ręcznymi +/- domy/hotel
+  const fullGroups=Object.keys(M.GROUPS).filter(g=>M.ownsFullGroup(st,id,g));
+  fullGroups.forEach(g=>{
+    const arr=M.GROUPS[g], cost=M.BOARD[arr[0]][6];
+    const houses=arr.map(p=>st.houses[p]);
+    const summary=arr.map(p=>{const h=st.houses[p];return h===5?"🏨":h>0?"🏠".repeat(h):"·";}).join(" ");
+    const mortgaged=arr.some(p=>st.mort[p]);
+    const blk=document.createElement("div"); blk.className="chip"; blk.style.borderLeft=`4px solid ${M.GROUP_COLORS[g]}`;
+    blk.style.cssText+=";display:inline-flex;align-items:center;gap:6px;padding:4px 8px";
+    const canBuild=!mortgaged && Math.min(...houses)<5;
+    const canSell=Math.max(...houses)>0;
+    blk.innerHTML=`<b style="color:${M.GROUP_COLORS[g]}">${g}</b> <span class="muted">${summary}</span>`;
+    const bMinus=document.createElement("button"); bMinus.className="sec"; bMinus.textContent="− 🏠"; bMinus.style.padding="3px 8px"; bMinus.disabled=!canSell; bMinus.title="Sprzedaj dom (połowa ceny)"; bMinus.onclick=()=>sellHouseUI(g);
+    const bPlus=document.createElement("button"); bPlus.textContent=`+ 🏠 ${cost}$`; bPlus.style.padding="3px 8px"; bPlus.disabled=!canBuild||st.players[id].cash<cost; bPlus.title=mortgaged?"Najpierw wykup hipotekę":"Buduj równomiernie"; bPlus.onclick=()=>buildHouseUI(g);
+    blk.appendChild(bMinus); blk.appendChild(bPlus);
+    box.appendChild(blk);
   });
   // Hipoteki
   mine.forEach(pos=>{
@@ -875,6 +915,30 @@ function renderManage(active){
     chip.onclick=()=>proposeBuy(mpos,oid,premium);
     box.appendChild(chip);
   });
+}
+function refreshManage(){ renderBoard(); renderPlayers(); renderRisk(); renderManage(true); }
+function buildHouseUI(g){
+  const st=app.st,id=app.humanId,arr=M.GROUPS[g];
+  if(arr.some(p=>st.mort[p])){ renderHint("Najpierw wykup hipotekę w tej grupie."); return; }
+  const tgt=arr.reduce((a,b)=>st.houses[b]<st.houses[a]?b:a), cost=M.BOARD[tgt][6];
+  if(st.houses[tgt]>=5){ renderHint("Ta grupa ma już hotele."); return; }
+  const hotel=st.houses[tgt]===4;
+  if(st.players[id].cash<cost){ renderHint("Za mało gotówki na budowę."); return; }
+  if(hotel&&st.bankHotels<=0){ renderHint("Brak hoteli w banku."); return; }
+  if(!hotel&&st.bankHouses<=0){ renderHint("Brak domów w banku — niedobór!"); return; }
+  st.players[id].cash-=cost; st.houses[tgt]++;
+  if(hotel){st.bankHotels--;st.bankHouses+=4;}else st.bankHouses--;
+  log(`Budujesz na ${M.BOARD[tgt][1]} (domów: ${st.houses[tgt]===5?"HOTEL":st.houses[tgt]})`);
+  refreshManage(); evalAndRecord();
+}
+function sellHouseUI(g){
+  const st=app.st,id=app.humanId,arr=M.GROUPS[g];
+  const tgt=arr.reduce((a,b)=>st.houses[b]>st.houses[a]?b:a); if(st.houses[tgt]===0) return;
+  const s=M.BOARD[tgt], wasHotel=st.houses[tgt]===5;
+  st.houses[tgt]--; if(wasHotel){st.bankHotels++;st.bankHouses-=4;}else st.bankHouses++;
+  st.players[id].cash+=Math.floor(s[6]/2);
+  log(`Sprzedajesz ${wasHotel?"hotel→domy":"dom"} na ${M.BOARD[tgt][1]} (+${Math.floor(s[6]/2)})`);
+  refreshManage(); evalAndRecord();
 }
 function needOneHuman(){
   const st=app.st, id=app.humanId, res=[];
@@ -970,7 +1034,9 @@ function openTrade(){
   const sel=$("tradePartner"); sel.innerHTML=partners.map(p=>`<option value="${p.id}">${p.name}</option>`).join("");
   app.trade={give:new Set(), recv:new Set(), deal:null};
   populateTrade(); $("tradeCash").value=0;
-  $("tradeVerdict").textContent="Zaznacz pola i kliknij „Oceń ofertę”.";
+  $("tradeGiveCard").checked=false; $("tradeRecvCard").checked=false;
+  $("tgcOwn").textContent=`(masz ${st.players[app.humanId].cards})`;
+  $("tradeVerdict").textContent="Zaznacz pola/karty i kliknij „Oceń ofertę”.";
   $("tradeDo").disabled=true;
   $("tradeModal").style.display="flex";
 }
@@ -983,10 +1049,12 @@ function populateTrade(){
     return c; };
   const gi=$("tradeGive"); gi.innerHTML=""; tradeable(st,app.humanId).forEach(p=>gi.appendChild(mk(p,"give")));
   const rc=$("tradeRecv"); rc.innerHTML=""; tradeable(st,pid).forEach(p=>rc.appendChild(mk(p,"recv")));
+  $("trcOwn").textContent=`(on ma ${st.players[pid].cards})`;
 }
 function evalTrade(){
   const st=app.st, pid=+$("tradePartner").value;
-  const deal={from:app.humanId, to:pid, give:[...app.trade.give], recv:[...app.trade.recv], cash:+$("tradeCash").value||0};
+  const deal={from:app.humanId, to:pid, give:[...app.trade.give], recv:[...app.trade.recv], cash:+$("tradeCash").value||0,
+    giveCards:$("tradeGiveCard").checked?1:0, recvCards:$("tradeRecvCard").checked?1:0};
   const chk=M.canTrade(st,deal);
   if(!chk.ok){ $("tradeVerdict").innerHTML=`❌ Niedozwolone: ${chk.why}`; $("tradeDo").disabled=true; return; }
   const dec=M.botDecideTrade(st,deal);
@@ -1005,7 +1073,8 @@ function doTrade(){
   const st=app.st, deal=app.trade.deal; if(!deal) return;
   M.applyTrade(st,deal);
   const gv=deal.give.map(p=>M.BOARD[p][1]).join(",")||"—", rc=deal.recv.map(p=>M.BOARD[p][1]).join(",")||"—";
-  log(`Wymiana z ${st.players[deal.to].name}: oddajesz [${gv}] za [${rc}]${deal.cash?` + ${deal.cash}$`:""}`);
+  const cardTxt=(deal.giveCards?" +🎫oddana":"")+(deal.recvCards?" +🎫wzięta":"");
+  log(`Wymiana z ${st.players[deal.to].name}: oddajesz [${gv}] za [${rc}]${deal.cash?` + ${deal.cash}$`:""}${cardTxt}`);
   annotate(["🤝","Handel","t-best"], `wymiana z ${st.players[deal.to].name}`);
   closeTrade(); renderBoard(); renderPlayers(); renderRisk(); renderManage(true); evalAndRecord(); renderAnalysis();
 }

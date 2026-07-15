@@ -182,6 +182,9 @@
       humanId: playersSpec.findIndex(p=>p.isHuman),
       goal: opts.goal||null,   // {type,target} tryb Szybki NEW Monopoly
       chestCards: (opts.chestVariant==="2021") ? CHEST_2021 : CHEST,
+      goSalary: (opts.goSalary!=null) ? opts.goSalary : 200,   // pensja za przejście START
+      freeParking: !!opts.freeParkingJackpot,                  // pula na Bezpłatnym parkingu
+      pot: 0,
     };
     return st;
   }
@@ -196,7 +199,7 @@
       chance:st.chance.slice(), chancePtr:st.chancePtr, chest:st.chest.slice(), chestPtr:st.chestPtr,
       turn:st.turn, round:st.round, forcedAuction:st.forcedAuction, allowTrades:st.allowTrades,
       log:[], done:st.done, winner:st.winner, humanId:st.humanId, goal:st.goal,
-      chestCards:st.chestCards,
+      chestCards:st.chestCards, goSalary:st.goSalary, freeParking:st.freeParking, pot:st.pot,
     };
   }
 
@@ -246,7 +249,7 @@
   function pay(st,pid,amount,creditor){
     const p=st.players[pid];
     if(p.cash<amount) raiseCash(st,pid,amount);
-    if(p.cash>=amount){ p.cash-=amount; if(creditor>=0) st.players[creditor].cash+=amount; return true; }
+    if(p.cash>=amount){ p.cash-=amount; if(creditor>=0) st.players[creditor].cash+=amount; else if(st.freeParking) st.pot+=amount; return true; }
     bankrupt(st,pid,creditor); return false;
   }
   function bankrupt(st,pid,creditor){
@@ -343,7 +346,8 @@
   // Zwraca {buy:pos} jeśli człowiek musi zdecydować o zakupie; inaczej null.
   function landing(st,pid,dice,rnd,interactive,opts){
     opts=opts||{}; const p=st.players[pid], s=BOARD[p.pos], t=s[2];
-    if(t===GO||t===FP||t===JAIL) return null;
+    if(t===GO||t===JAIL) return null;
+    if(t===FP){ if(st.freeParking && st.pot>0){ st._lastPot=st.pot; p.cash+=st.pot; st.pot=0; } return null; }
     if(t===G2J){ sendJail(st,pid); return null; }
     if(t===TAX){ pay(st,pid,s[4],-1); return null; }
     if(t===CH) return drawCard(st,pid,rnd,interactive,"chance");
@@ -385,8 +389,8 @@
     }
     return null;
   }
-  function moveTo(st,pid,pos,collectGo){ const p=st.players[pid]; if(collectGo&&pos<p.pos) p.cash+=200; p.pos=pos; }
-  function moveBy(st,pid,steps){ const p=st.players[pid]; let np=p.pos+steps; if(np>=40){ np-=40; p.cash+=200; } p.pos=np; }
+  function moveTo(st,pid,pos,collectGo){ const p=st.players[pid]; if(collectGo&&pos<p.pos) p.cash+=st.goSalary; p.pos=pos; }
+  function moveBy(st,pid,steps){ const p=st.players[pid]; let np=p.pos+steps; if(np>=40){ np-=40; p.cash+=st.goSalary; } p.pos=np; }
 
   // ---------- Tura AI (pełna) ----------
   function jailTurn(st,pid,rnd){
@@ -469,20 +473,24 @@
   // ---------- Handel człowiek↔bot (oceniany silnikiem) ----------
   function groupHasHouses(st,group){ return GROUPS[group] && GROUPS[group].some(p=>st.houses[p]>0); }
   function canTrade(st,deal){
-    const g=deal.give||[], r=deal.recv||[], cash=deal.cash||0;
-    if(!g.length && !r.length && !cash) return {ok:false,why:"pusta oferta"};
+    const g=deal.give||[], r=deal.recv||[], cash=deal.cash||0, gc=deal.giveCards||0, rc=deal.recvCards||0;
+    if(!g.length && !r.length && !cash && !gc && !rc) return {ok:false,why:"pusta oferta"};
     for(const p of g){ if(st.owner[p]!==deal.from) return {ok:false,why:"to nie Twoje pole"};
       if(groupHasHouses(st,BOARD[p][3])) return {ok:false,why:"najpierw sprzedaj domy w tej grupie"}; }
     for(const p of r){ if(st.owner[p]!==deal.to) return {ok:false,why:"pole nie należy do kontrahenta"};
       if(groupHasHouses(st,BOARD[p][3])) return {ok:false,why:"kontrahent ma domy w tej grupie"}; }
     if(cash>0 && st.players[deal.from].cash<cash) return {ok:false,why:"za mało Twojej gotówki"};
     if(cash<0 && st.players[deal.to].cash< -cash) return {ok:false,why:"kontrahent nie ma gotówki"};
+    if(gc>st.players[deal.from].cards) return {ok:false,why:"nie masz karty wyjścia"};
+    if(rc>st.players[deal.to].cards) return {ok:false,why:"kontrahent nie ma karty wyjścia"};
     return {ok:true};
   }
   function applyTrade(st,deal){
     for(const p of (deal.give||[])) st.owner[p]=deal.to;
     for(const p of (deal.recv||[])) st.owner[p]=deal.from;
     const cash=deal.cash||0; st.players[deal.from].cash-=cash; st.players[deal.to].cash+=cash;
+    const gc=deal.giveCards||0, rc=deal.recvCards||0;
+    st.players[deal.from].cards += rc-gc; st.players[deal.to].cards += gc-rc;
   }
   function evalDealFor(st,deal,pid,n,seed){ const c=clone(st); applyTrade(c,deal); return evaluate(c,n||160,seed)[pid]; }
   function botDecideTrade(st,deal,n){
