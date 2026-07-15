@@ -1,8 +1,17 @@
 # 🎩 Monopoly Lab — symulator, silnik AI i wytrenowany model
 
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
+![Bez zależności](https://img.shields.io/badge/zale%C5%BCno%C5%9Bci-0-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Pages](https://img.shields.io/badge/demo-GitHub%20Pages-222?logo=github)
+
 > 🌐 **Demo na żywo (GitHub Pages):** https://lkolo-prez.github.io/monopoly-lab/ &nbsp;·&nbsp;
 > 🎮 [Monopoly Lab](https://lkolo-prez.github.io/monopoly-lab/monopoly-web/index.html) &nbsp;·&nbsp;
 > 📊 [Statystyki](https://lkolo-prez.github.io/monopoly-lab/monopoly-web/stats.html)
+
+**Monopoly Lab** to kompletne środowisko: grywalny silnik z oceną pozycji na żywo (Monte Carlo),
+masowe symulacje, turnieje, **wytrenowane modele AI** (ewolucja self-play + RL + agent hybrydowy)
+i pełna analiza matematyczna planszy — wszystko działa lokalnie, bez zależności zewnętrznych.
 
 Kompletny silnik Monopoly w czystym Pythonie (bez zależności zewnętrznych), który:
 
@@ -312,4 +321,27 @@ Wyniki z `run_matrix.py` (pełny surowy raport: `wyniki_matryca.txt`).
 - Silnik handlu (wymiany win-win + zakupy gotówkowe rozbitych pojedynczych pól).
 
 Wyniki masowej symulacji zapisują się w `wyniki_10k.txt`.
+
+---
+
+## 🤝 Wkład (Contributing)
+
+Pull requesty mile widziane. Najciekawsze kierunki:
+- **Nowe strategie/agenci** — odziedzicz po `monopoly.agent.Agent` i zarejestruj (patrz sekcja „Podłącz własnego bota").
+- **Silniejsze modele** — hybryda RL+reguły (mamy `monopoly/hybrid.py`), pełne deep RL (PPO/DQN), lepszy MCTS.
+- **Warianty planszy** — edycje regionalne, inne zestawy zasad domowych.
+- **Wizualizacje** — nowe wykresy i analizy w web-Labie.
+
+Zgłoszenia błędów i pomysły: [Issues](https://github.com/lkolo-prez/monopoly-lab/issues).
+
+## 📜 Licencja
+
+[MIT](LICENSE) © 2026 lkolo-prez. Projekt edukacyjny, niekomercyjny, fanowski —
+niezwiązany z Hasbro (Monopoly® to znak towarowy Hasbro).
+
+## 🙏 Podziękowania / inspiracje
+
+Frameworki: Monopyly, MonopolySimulator (Giogix2), gamescomputersplay, TanvirDeol/Monopoly-AI.
+Analizy: łańcuchy Markowa (UIUC „Markovopoly", MIT SP.268, Uppsala), „Learning Monopoly Gameplay:
+A Hybrid Model-Free Deep RL" (Purdue). Zbudowane z pomocą Claude Code.
  

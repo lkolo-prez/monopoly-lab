@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Monopoly Analyzer — silnik oceny na żywo</title>
+<title>Monopoly Lab — silnik oceny, symulacje i wytrenowany model AI</title>
 <style>
   :root{
     --bg:#0e1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
@@ -151,6 +151,74 @@
   .tchip.sel{border-color:var(--accent);background:#13314a}
   .tchip.dis{opacity:.4;cursor:not-allowed}
   .verdict{margin-top:10px;padding:10px;border-radius:8px;background:var(--panel2);font-size:13px}
+  /* ================= THEME OVERHAUL — dopracowany wygląd ================= */
+  :root{
+    --bg:#0a0e16; --panel:#141a24; --panel2:#1b2431; --line:#28303f;
+    --txt:#eaf0f7; --dim:#93a1b4; --accent:#5aa2ff; --accent2:#8b5cf6;
+    --good:#42c96a; --bad:#ff5d57; --warn:#f0c150; --gold:#f2c14e; --brill:#35c4e0;
+    --shadow:0 10px 30px rgba(0,0,0,.38);
+  }
+  body{
+    background:
+      radial-gradient(1100px 560px at 88% -12%, rgba(90,120,255,.14) 0%, transparent 60%),
+      radial-gradient(900px 500px at -8% 6%, rgba(139,92,246,.12) 0%, transparent 55%),
+      #0a0e16;
+    font:14.5px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(90,162,255,.32)}
+  *::-webkit-scrollbar{width:10px;height:10px}
+  *::-webkit-scrollbar-thumb{background:#2a3446;border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+  *::-webkit-scrollbar-thumb:hover{background:#3a465c;background-clip:padding-box}
+
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0)),var(--panel);
+    border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.03)}
+  .brandbar{padding:16px 16px 4px}
+  .brandbar .logo{font-size:24px;font-weight:800;letter-spacing:-.5px;
+    background:linear-gradient(120deg,#fff 10%,#9cc4ff 60%,#f2c14e);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .tabs{border-bottom:1px solid var(--line);gap:2px}
+  .tabs button{color:var(--dim);border:0;background:transparent;border-radius:10px 10px 0 0;position:relative;transition:color .15s,background .15s}
+  .tabs button:hover{color:var(--txt);background:rgba(255,255,255,.03)}
+  .tabs button.active{color:var(--txt);background:linear-gradient(180deg,rgba(90,162,255,.14),transparent);border:1px solid var(--line);border-bottom:none}
+  .tabs button.active::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px}
+
+  button{background:linear-gradient(180deg,#63a8ff,#4a86e8);color:#04101f;border:0;border-radius:10px;padding:9px 15px;font-weight:700;cursor:pointer;font-size:13px;
+    transition:transform .08s ease,box-shadow .15s,filter .15s;box-shadow:0 2px 10px rgba(74,134,232,.35)}
+  button:hover{transform:translateY(-1px);filter:brightness(1.06)}
+  button:active{transform:translateY(0)}
+  button.sec{background:linear-gradient(180deg,#232d3d,#1a222f);color:var(--txt);border:1px solid var(--line);box-shadow:none}
+  button.ok{background:linear-gradient(180deg,#4bd47b,#33b866);color:#03150a}
+  button.no{background:linear-gradient(180deg,#ff6b64,#e8483f);color:#fff}
+  button:disabled{opacity:.4;filter:grayscale(.3)}
+
+  .board{border:1px solid #21402c;border-radius:14px;box-shadow:var(--shadow),inset 0 0 60px rgba(0,0,0,.35);background:#0c1f16}
+  .cell{transition:filter .15s,transform .1s;border:1px solid rgba(0,0,0,.25)}
+  .cell:hover{filter:brightness(1.28);z-index:3}
+  .tok{box-shadow:0 0 0 1px rgba(0,0,0,.5),0 0 8px rgba(255,255,255,.25)}
+  .center{background:radial-gradient(circle at 50% 40%,#102a1e,#0a1912);border-radius:10px}
+  .die{background:linear-gradient(180deg,#fff,#dbe4ee);box-shadow:0 3px 8px rgba(0,0,0,.4);border-radius:9px}
+
+  .bar{background:#0f1621;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+  .bar>span,.fill{transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .pl{transition:border-color .15s,background .15s;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)}
+  .pl.cur{box-shadow:0 0 0 1px var(--accent),0 0 22px rgba(90,162,255,.22) inset}
+  .pill{transition:all .12s}
+  .pill:hover{border-color:var(--accent);color:var(--txt)}
+  .pill.on{background:linear-gradient(180deg,rgba(90,162,255,.25),rgba(90,162,255,.08));border-color:var(--accent)}
+  .chip.act:hover{border-color:var(--accent);transform:translateY(-1px)}
+
+  .overlay,.tradeModal{backdrop-filter:blur(6px)}
+  .setup,.tradeBox{box-shadow:0 24px 70px rgba(0,0,0,.55);border-radius:16px}
+  .setup h1{background:linear-gradient(120deg,#fff,#9cc4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .chk{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-size:13px;cursor:pointer;user-select:none}
+  .chk input{accent-color:var(--accent)}
+  select,input[type=number],input[type=text]{transition:border-color .15s}
+  select:focus,input:focus{outline:none;border-color:var(--accent)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .card,.pl,.mv{animation:fadeUp .25s ease both}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -169,10 +237,15 @@
       <select id="np"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
     </div>
     <div class="row"><label>Kapitał startowy</label>
-      <select id="cash"><option value="1500" selected>1500</option><option value="2000">2000</option></select>
+      <select id="cash"><option value="1000">1000 (trudniej)</option><option value="1500" selected>1500 (klasyk)</option><option value="2000">2000</option><option value="2500">2500</option><option value="3000">3000</option><option value="5000">5000 (luz)</option><option value="10000">10000 (piaskownica)</option></select>
     </div>
     <div class="row"><label>Tryb / cel</label>
       <select id="goal"></select>
+    </div>
+    <div class="row"><label>Zasady</label>
+      <label class="chk"><input type="checkbox" id="rAuction" checked> przymusowe licytacje</label>
+      <label class="chk"><input type="checkbox" id="rTrades" checked> handel</label>
+      <label class="chk"><input type="checkbox" id="rMortgage" checked> hipoteki</label>
     </div>
     <div id="opps"></div>
     <div class="row" style="margin-top:14px">
@@ -190,6 +263,7 @@
   <button data-tab="sim" onclick="showTab('sim')">🧪 Laboratorium symulacji</button>
   <button data-tab="turniej" onclick="showTab('turniej')">🏆 Turniej</button>
   <button data-tab="strat" onclick="showTab('strat')">♟️ Strategie</button>
+  <button data-tab="bench" onclick="showTab('bench')">🔬 Benchmark</button>
   <button data-tab="know" onclick="showTab('know')">📚 Wiedza</button>
 </nav>
 <div class="app tab" id="app" data-tab="play" style="display:flex">
@@ -275,15 +349,22 @@
       <div class="simctl" id="simStrats"></div>
       <div class="simctl">
         <label>Graczy: <select id="simN"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label>
-        <label>Gier: <select id="simGames"><option>500</option><option selected>1500</option><option>3000</option><option>6000</option></select></label>
-        <label>Kapitał: <select id="simCash"><option selected>1500</option><option>2000</option></select></label>
+        <label>Gier: <select id="simGames"><option>500</option><option selected>1500</option><option>3000</option><option>6000</option><option>12000</option><option>25000</option></select></label>
+        <label>Kapitał: <select id="simCash"><option>1000</option><option selected>1500</option><option>2000</option><option>2500</option><option>3000</option><option>5000</option></select></label>
         <label>Cel: <select id="simGoal"></select></label>
-        <button class="ok" id="simRun">▶ Uruchom</button>
+      </div>
+      <div class="simctl">
+        <label class="chk"><input type="checkbox" id="simAuction" checked> licytacje</label>
+        <label class="chk"><input type="checkbox" id="simTrades" checked> handel</label>
+        <label class="chk"><input type="checkbox" id="simMortgage" checked> hipoteki</label>
+        <button class="ok" id="simRun">▶ Uruchom symulację</button>
         <span class="muted" id="simStatus"></span>
       </div>
     </div>
     <div class="card"><h3>🏆 Win-rate strategii</h3><div id="simWins"><span class="muted">Uruchom symulację…</span></div></div>
+    <div class="card"><h3>💰 Średni majątek netto</h3><div id="simNet"></div></div>
     <div class="card"><h3>💥 Odsetek bankructw</h3><div id="simBankr"></div></div>
+    <div class="card"><h3>📊 Udział w rynku (majątek)</h3><div class="chartwrap"><canvas id="simShare" height="200"></canvas></div></div>
     <div class="card wide">
       <h3>⏱️ Rozkład długości gier (liczba rund)</h3>
       <div class="chartwrap"><canvas id="simHist" height="220"></canvas></div>
@@ -322,6 +403,11 @@
     </div>
     <div class="card wide"><h3>📖 Profile strategii</h3><div id="stratDesc"></div></div>
   </div>
+</div>
+
+<!-- TAB: Benchmark / Literatura -->
+<div class="tab" id="tab-bench" data-tab="bench">
+  <div class="prose" id="benchmark"></div>
 </div>
 
 <!-- TAB: Wiedza -->
@@ -403,9 +489,11 @@ $("start").onclick=()=>{
     spec.push({ name:$("nm"+i).value||("Gracz "+i), isHuman:human,
       strat: human?"balanced":$("st"+i).value, diff: human?"sredni":$("df"+i).value });
   }
-  const st=M.newGame(spec,{startCash, goal});
+  const cfg={startCash, goal,
+    forcedAuction:$("rAuction").checked, allowTrades:$("rTrades").checked, allowMortgage:$("rMortgage").checked};
+  const st=M.newGame(spec,cfg);
   app={st, curId:0, hist:[], hstate:null, aiDelay:650, watch:(mode==="watch"),
-       humanId: st.humanId, lastHint:null, goal, goalLabel:(gd?gd.label:""), moves:[]};
+       humanId: st.humanId, lastHint:null, goal, goalLabel:(gd?gd.label:""), moves:[], paused:false};
   $("setup").style.display="none"; $("labwrap").style.display="block"; showTab("play");
   buildBoard(); sizeGraph(); renderRefROI();
   log("Gra rozpoczęta: "+spec.map(p=>p.name).join(", "));
@@ -461,10 +549,14 @@ function renderPlayers(){
   const box=$("playersBox"); box.innerHTML="";
   app.st.players.forEach(pl=>{
     const nw=M.netWorth(app.st,pl.id);
+    const nprops=M.propsOf(app.st,pl.id).length;
+    const mono=M.fullGroups(app.st,pl.id).length;
+    const rails=M.numRails(app.st,pl.id), utils=M.numUtils(app.st,pl.id);
     const div=document.createElement("div"); div.className="pl"+(pl.id===app.curId?" cur":"");
     div.innerHTML=`<div class="dot" style="background:${COLORS[pl.id]}"></div>
       <div class="info"><div class="nm">${pl.name}${pl.isHuman?" 👤":""}</div>
-      <div class="sub">${pl.bankrupt?"BANKRUT":(M.STRATS[pl.strat].name+(pl.isHuman?"":" · "+pl.diff))}</div></div>
+      <div class="sub">${pl.bankrupt?"BANKRUT":(M.STRATS[pl.strat].name+(pl.isHuman?"":" · "+pl.diff))}</div>
+      <div class="sub" style="color:#9fb0c0">🏠 ${nprops} pól${mono?` · 🎨 ${mono} monopol${mono>1?'e':''}`:''}${rails?` · 🚂 ${rails}`:''}${utils?` · 💡 ${utils}`:''}</div></div>
       <div style="text-align:right"><div class="cash">${pl.bankrupt?"—":pl.cash+"$"}</div>
       <div class="badge">maj. ${nw}</div></div>`;
     box.appendChild(div);
@@ -570,9 +662,24 @@ function beginTurn(){
   $("turnLabel").innerHTML=`<span style="color:${COLORS[pl.id]}">${pl.name}</span>`;
   setDice(); renderBoard(); renderPlayers(); renderRisk(); renderAnalysis();
   if(pl.isHuman){ startHumanTurn(); }
-  else { renderControls([]); renderHint(`Tura: <b>${pl.name}</b> (${M.STRATS[pl.strat].name})`); setTimeout(runAiTurn, app.aiDelay); }
+  else { renderControls(aiControls()); renderHint(`Tura: <b>${pl.name}</b> (${M.STRATS[pl.strat].name})`+(app.paused?" — ⏸ pauza":"")); if(!app.paused) setTimeout(runAiTurn, app.aiDelay); }
+}
+function aiControls(){
+  const c=[{t: app.paused?"▶ Wznów":"⏸ Pauza", cls: app.paused?"ok":"sec", fn:togglePause}];
+  if(app.humanId>=0) c.push({t:"🤝 Handel", cls:"sec", fn:openTrade});
+  c.push({t:"⏭ szybciej", cls:"sec", fn:()=>{app.aiDelay=Math.max(0,app.aiDelay/2);}});
+  c.push({t:"🐢 wolniej", cls:"sec", fn:()=>{app.aiDelay=Math.min(2000,(app.aiDelay||1)*2+120);}});
+  return c;
+}
+function togglePause(){
+  app.paused=!app.paused;
+  const pl=app.st.players[app.curId];
+  if(!app.paused && pl && !pl.isHuman && !app.st.done){ renderControls(aiControls()); setTimeout(runAiTurn, app.aiDelay); }
+  else renderControls(aiControls());
+  renderHint(app.paused?"⏸ Pauza — możesz przeanalizować pozycję lub zaproponować wymianę (🤝 Handel).":"▶ Wznowiono.");
 }
 function runAiTurn(){
+  if(app.paused) return;
   const id=app.curId;
   M.aiTurn(app.st, id, rnd);
   log(`${app.st.players[id].name} zakończył turę`);
@@ -909,14 +1016,44 @@ $("tradeClose").onclick=closeTrade;
 
 /* ================= ZAKŁADKI + ANALITYKA ================= */
 function showTab(name){
-  ["play","board","sim","turniej","strat","know"].forEach(t=>{ const el=$(t==="play"?"app":"tab-"+t);
+  ["play","board","sim","turniej","strat","bench","know"].forEach(t=>{ const el=$(t==="play"?"app":"tab-"+t);
     if(el) el.style.display=(t===name)?(t==="play"?"flex":"block"):"none"; });
   if(document.querySelectorAll) document.querySelectorAll("#tabnav button").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
   if(name==="board" && !app._binit){ app._binit=1; buildHeatBoard(); renderHeat(app.heatMode||"freq"); renderFreqBars(); renderRoiBars(); }
   if(name==="strat" && !app._sinit){ app._sinit=1; renderStratMatrix(); renderStratDesc(); }
   if(name==="know" && !app._kinit){ app._kinit=1; renderKnowledge(); }
+  if(name==="bench" && !app._chinit){ app._chinit=1; renderBenchmark(); }
   if(name==="sim" && !app._siminit){ app._siminit=1; initSim(); }
   if(name==="turniej" && !app._tinit){ app._tinit=1; initTournament(); }
+}
+function renderBenchmark(){
+  $("benchmark").innerHTML=`
+  <h2>🔬 Benchmark — nasze wyniki vs literatura</h2>
+  <p class="muted">Niezależne symulacje tego projektu odtwarzają wyniki publikowanych prac naukowych.
+  To walidacja: jeśli nasz silnik zgadza się z modelami Markowa i badaniami RL, wnioskom można ufać.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px">
+    <tr><th style="text-align:left;padding:8px;border-bottom:1px solid var(--line);color:var(--dim)">Nasz wynik</th>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid var(--line);color:var(--dim)">Literatura</th>
+        <th style="padding:8px;border-bottom:1px solid var(--line);color:var(--dim)">Zgodność</th></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid var(--line)">Więzienie ~22% najczęstsze; potem czerwone (Illinois), Start, parking, dworce, pomarańczowe</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line)">Markov (UIUC/MIT/Uppsala): identyczna kolejność; Illinois najczęstsze poza więzieniem</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line);text-align:center;color:var(--good)">✓</td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid var(--line)">Pomarańczowe = najlepszy ROI (najszybszy break-even)</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line)">„Orange reaches break-even fastest / lowest rounds to profit"</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line);text-align:center;color:var(--good)">✓</td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid var(--line)">Model-free RL na samej decyzji zakupu plateauuje (parytet)</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line)">Purdue: skośny rozkład akcji szkodzi uczeniu → potrzebna hybryda/hierarchia</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line);text-align:center;color:var(--good)">✓</td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid var(--line)">Agent hybrydowy (champion + MCTS na kluczowych decyzjach) bije championa 57% i całą stawkę</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line)">Purdue: hybrydowy PPO ~91% vs boty o stałej polityce; hybryda > standard o 20%</td>
+        <td style="padding:8px;border-bottom:1px solid var(--line);text-align:center;color:var(--warn)">~ kierunek</td></tr>
+  </table>
+  <h3>Co z tego wynika</h3>
+  <p>Nasz najsilniejszy agent (<b>hybrid</b>) implementuje receptę z Purdue: tania polityka dla częstych/prostych
+  decyzji + przeszukiwanie dla rzadkich/kluczowych. To rozwiązuje problem skośnego rozkładu akcji, przez który
+  naiwne RL utyka. Kierunek jest zbieżny ze state-of-the-art.</p>
+  <p class="muted" style="font-size:12.5px;margin-top:14px">Źródła: prace o łańcuchach Markowa w Monopoly (UIUC „Markovopoly", MIT SP.268, Uppsala),
+  „Learning Monopoly Gameplay: A Hybrid Model-Free Deep RL" (Purdue). Frameworki-inspiracje: Monopyly, MonopolySimulator, TanvirDeol/Monopoly-AI.</p>`;
 }
 /* ---------- Turniej H2H ---------- */
 function initTournament(){
@@ -1021,8 +1158,9 @@ function runSim(){
   const n=+$("simN").value, games=+$("simGames").value, cash=+$("simCash").value;
   const gd=GOALS[$("simGoal").value], goal=(gd&&gd.type)?{type:gd.type,target:gd.target}:null;
   const seats=[]; for(let i=0;i<n;i++) seats.push({strat:chosen[i%chosen.length]});
+  const cfg={startCash:cash,goal, forcedAuction:$("simAuction").checked, allowTrades:$("simTrades").checked, allowMortgage:$("simMortgage").checked};
   $("simStatus").textContent=`liczę ${games} gier…`; $("simRun").disabled=true;
-  setTimeout(()=>{ const t0=Date.now(); const r=M.batchSim(seats,games,{startCash:cash,goal});
+  setTimeout(()=>{ const t0=Date.now(); const r=M.batchSim(seats,games,cfg);
     const dt=Date.now()-t0; renderSim(r,n,dt); $("simStatus").textContent=`gotowe (${games} gier, ${dt}ms)`; $("simRun").disabled=false;
   },30);
 }
@@ -1032,13 +1170,33 @@ function renderSim(r,n,dt){
       color: (100*r.wins[s]/Math.max(1,r.played[s]))>=base?"#3fb950":"#e3833e", fmt:v=>v+"%"}))
     .sort((a,b)=>b.value-a.value);
   hbars($("simWins"), winRows, {max:Math.max(base*2,...winRows.map(w=>w.value))});
+  const netRows=r.strategies.map(s=>({label:M.STRATS[s].name, value:Math.round(r.netSum[s]/Math.max(1,r.played[s])),
+      color:"#f0c150", fmt:v=>v+"$"})).sort((a,b)=>b.value-a.value);
+  hbars($("simNet"), netRows, {});
   const bkRows=r.strategies.map(s=>({label:M.STRATS[s].name, value:+(100*r.bankr[s]/Math.max(1,r.played[s])).toFixed(0),
       color:"#f85149", fmt:v=>v+"%"})).sort((a,b)=>b.value-a.value);
   hbars($("simBankr"), bkRows, {max:100});
+  donut($("simShare"), r.strategies.map((s,i)=>({label:M.STRATS[s].name, value:r.netSum[s]})));
   histogram($("simHist"), r.lengths, {});
   const capPct=Math.round(100*(1-r.finished/r.games));
   $("simSummary").innerHTML=`Śr. długość: <b>${r.avgRounds.toFixed(0)}</b> rund · rozstrzygnięte nokautem: <b>${Math.round(100*r.finished/r.games)}%</b>
     · limit rund (paradoks nieskończonej gry): <b>${capPct}%</b> · baza losowa: ${base.toFixed(1)}%`;
+}
+// wykres kołowy (donut) — udział w rynku
+const PIE=["#58a6ff","#f0c150","#3fb950","#f85149","#9b59b6","#00cfe8","#e8892b","#d6338b","#7f8c8d","#2ecc71"];
+function donut(cv, data){
+  const ctx=cv.getContext("2d"); const W=cv.width=Math.max(300,cv.clientWidth)*2, H=cv.height=200*2;
+  ctx.clearRect(0,0,W,H); const total=data.reduce((a,d)=>a+Math.max(0,d.value),0)||1;
+  const cx=H*0.5, cy=H*0.5, r=H*0.42, ir=r*0.58; let ang=-Math.PI/2;
+  data.forEach((d,i)=>{ const frac=Math.max(0,d.value)/total, a2=ang+frac*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,ang,a2); ctx.closePath(); ctx.fillStyle=PIE[i%PIE.length]; ctx.fill(); ang=a2; });
+  ctx.beginPath(); ctx.arc(cx,cy,ir,0,Math.PI*2); ctx.fillStyle="#161b22"; ctx.fill();
+  // legenda po prawej
+  ctx.font="22px system-ui"; ctx.textBaseline="middle";
+  const sorted=data.map((d,i)=>({...d,i})).sort((a,b)=>b.value-a.value);
+  let ly=cy-sorted.length*16+10;
+  sorted.slice(0,8).forEach(d=>{ ctx.fillStyle=PIE[d.i%PIE.length]; ctx.fillRect(H+10,ly-8,16,16);
+    ctx.fillStyle="#c9d4e0"; ctx.fillText(`${d.label} ${(100*Math.max(0,d.value)/total).toFixed(0)}%`, H+34, ly); ly+=34; });
 }
 
 /* ---------- Macierz strategii ---------- */
