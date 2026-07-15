@@ -115,3 +115,23 @@ CHEST_CARDS = [
     ("Druga nagroda w konkursie piękności — odbierz 10", "collect", 10),
     ("Otrzymujesz spadek — odbierz 100", "collect", 100),
 ]
+
+# Nowa Kasa Społeczna 2021 (karty głosowane przez fanów) — wariant opcjonalny.
+CHEST_2021_CARDS = [
+    ("Wieczory z sąsiadem — same historie! Odbierz 100", "collect", 100),
+    ("Sprzątasz miejskie ścieżki — odbierz 50", "collect", 50),
+    ("Oddajesz krew — były darmowe ciastka! Odbierz 10", "collect", 10),
+    ("Kupujesz ciastka z kiermaszu — zapłać 50", "pay", 50),
+    ("Ratujesz szczeniaka — wyjdź za darmo z więzienia", "get_out_of_jail", 0),
+    ("Organizujesz imprezę sąsiedzką — odbierz po 10 od każdego", "collect_each", 10),
+    ("Głośna muzyka w nocy — idź do więzienia", "go_to_jail", 0),
+    ("Pomagasz sąsiadce z zakupami — dostajesz obiad! Odbierz 20", "collect", 20),
+    ("Budujesz plac zabaw przy szkole — odbierz 100", "collect", 100),
+    ("Grasz z dziećmi w szpitalu — odbierz 100", "collect", 100),
+    ("Kiermasz myjni — zapomniałeś zamknąć okna! Zapłać 100", "pay", 100),
+    ("Kończysz bieg na cel charytatywny — idź na START (odbierz 200)", "move_to", POS_GO),
+    ("Pomagasz sąsiadom po burzy — odbierz 200", "collect", 200),
+    ("Darowizna dla schroniska — zapłać 50", "pay", 50),
+    ("Projekt remontowy: 40 za dom, 115 za hotel", "repairs", (40, 115)),
+    ("Kiermasz wypieków dla szkoły — odbierz 25", "collect", 25),
+]

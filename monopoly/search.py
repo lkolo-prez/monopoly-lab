@@ -46,6 +46,7 @@ def clone_game(game):
     g.chest = game.chest[:]
     g.chance_i = game.chance_i
     g.chest_i = game.chest_i
+    g.chest_cards = game.chest_cards
     g.group_pos = game.group_pos
     g.round = game.round
     return g

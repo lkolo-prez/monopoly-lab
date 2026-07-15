@@ -247,6 +247,9 @@
       <label class="chk"><input type="checkbox" id="rTrades" checked> handel</label>
       <label class="chk"><input type="checkbox" id="rMortgage" checked> hipoteki</label>
     </div>
+    <div class="row"><label>Kasa Społeczna</label>
+      <select id="chestVariant"><option value="classic" selected>Klasyczna (16 kart)</option><option value="2021">Nowa 2021 (fani)</option></select>
+    </div>
     <div id="opps"></div>
     <div class="row" style="margin-top:14px">
       <button id="start">▶ Rozpocznij grę</button>
@@ -489,7 +492,7 @@ $("start").onclick=()=>{
     spec.push({ name:$("nm"+i).value||("Gracz "+i), isHuman:human,
       strat: human?"balanced":$("st"+i).value, diff: human?"sredni":$("df"+i).value });
   }
-  const cfg={startCash, goal,
+  const cfg={startCash, goal, chestVariant:$("chestVariant").value,
     forcedAuction:$("rAuction").checked, allowTrades:$("rTrades").checked, allowMortgage:$("rMortgage").checked};
   const st=M.newGame(spec,cfg);
   app={st, curId:0, hist:[], hstate:null, aiDelay:650, watch:(mode==="watch"),

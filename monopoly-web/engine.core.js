@@ -96,6 +96,25 @@
     ["Konsultacje +25","get",25],["Naprawa ulic 40/115","repair",[40,115]],
     ["Konkurs +10","get",10],["Spadek +100","get",100],
   ];
+  // Nowa Kasa Społeczna 2021 (karty głosowane przez fanów) — wariant opcjonalny
+  const CHEST_2021 = [
+    ["Wieczory z sąsiadem — same historie! Odbierz 100","get",100],
+    ["Sprzątasz miejskie ścieżki. Odbierz 50","get",50],
+    ["Oddajesz krew — były darmowe ciastka! Odbierz 10","get",10],
+    ["Kupujesz ciastka z kiermaszu. Zapłać 50","pay",50],
+    ["Ratujesz szczeniaka — i sam czujesz się uratowany! Wyjście z więzienia","getout",0],
+    ["Organizujesz imprezę sąsiedzką. Odbierz po 10 od każdego","geteach",10],
+    ["Głośna muzyka w nocy? Sąsiedzi niezadowoleni. Idź do więzienia","tojail",0],
+    ["Pomagasz sąsiadce z zakupami — dostajesz obiad! Odbierz 20","get",20],
+    ["Budujesz plac zabaw przy szkole — testujesz zjeżdżalnię! Odbierz 100","get",100],
+    ["Grasz z dziećmi w szpitalu dziecięcym. Odbierz 100","get",100],
+    ["Kiermasz myjni — zapomniałeś zamknąć okna! Zapłać 100","pay",100],
+    ["Kończysz bieg i zbierasz na szpital! Idź na START, odbierz 200","move",0],
+    ["Pomagasz sąsiadom sprzątać ogrody po burzy. Odbierz 200","get",200],
+    ["Darowizna dla schroniska. Zapłać 50","pay",50],
+    ["Projekt remontowy: 40 za dom, 115 za hotel","repair",[40,115]],
+    ["Kiermasz wypieków dla szkoły. Odbierz 25","get",25],
+  ];
 
   // ---------- Strategie AI (jak w symulatorze Pythona) ----------
   const STRATS = {
@@ -162,6 +181,7 @@
       log:[], done:false, winner:-1,
       humanId: playersSpec.findIndex(p=>p.isHuman),
       goal: opts.goal||null,   // {type,target} tryb Szybki NEW Monopoly
+      chestCards: (opts.chestVariant==="2021") ? CHEST_2021 : CHEST,
     };
     return st;
   }
@@ -176,6 +196,7 @@
       chance:st.chance.slice(), chancePtr:st.chancePtr, chest:st.chest.slice(), chestPtr:st.chestPtr,
       turn:st.turn, round:st.round, forcedAuction:st.forcedAuction, allowTrades:st.allowTrades,
       log:[], done:st.done, winner:st.winner, humanId:st.humanId, goal:st.goal,
+      chestCards:st.chestCards,
     };
   }
 
@@ -345,7 +366,7 @@
     st.players[bids[0][1]].cash-=price; st.owner[pos]=bids[0][1];
   }
   function drawCard(st,pid,rnd,interactive,kind){
-    const deck=kind==="chance"?st.chance:st.chest, cards=kind==="chance"?CHANCE:CHEST;
+    const deck=kind==="chance"?st.chance:st.chest, cards=kind==="chance"?CHANCE:(st.chestCards||CHEST);
     const idx=kind==="chance"?st.chancePtr++:st.chestPtr++; const [desc,act,val]=cards[deck[idx%deck.length]];
     const p=st.players[pid];
     switch(act){

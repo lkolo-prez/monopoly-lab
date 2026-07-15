@@ -28,7 +28,7 @@ class Player:
 class Game:
     def __init__(self, players_spec, seed=None, logger=None, max_rounds=1000,
                  start_cash=1500, forced_auction=True, allow_trades=True,
-                 allow_mortgage=True, goal=None):
+                 allow_mortgage=True, goal=None, chest_variant="classic"):
         """players_spec: lista (nazwa, strategia).
 
         Warianty gry:
@@ -61,7 +61,9 @@ class Game:
 
         # potasowane talie
         self.chance = list(range(len(data.CHANCE_CARDS)))
-        self.chest = list(range(len(data.CHEST_CARDS)))
+        self.chest_cards = (data.CHEST_2021_CARDS if chest_variant == "2021"
+                            else data.CHEST_CARDS)
+        self.chest = list(range(len(self.chest_cards)))
         self.rng.shuffle(self.chance)
         self.rng.shuffle(self.chest)
         self.chance_i = 0
@@ -202,7 +204,7 @@ class Game:
             self.draw_card(player, self.chance, data.CHANCE_CARDS, "chance")
             return
         if typ == data.CHEST:
-            self.draw_card(player, self.chest, data.CHEST_CARDS, "chest")
+            self.draw_card(player, self.chest, self.chest_cards, "chest")
             return
 
         # pole własnościowe (ulica, kolej, spółka)
